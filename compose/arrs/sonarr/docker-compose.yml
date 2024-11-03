@@ -1,0 +1,56 @@
+services:
+  # TV Show Manager
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: always
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${APPDATA_DIR}/sonarr:/config
+      - ${LOG_DIR}/sonarr:/config/logs
+      - ${DATA_DIR}:/data
+    networks:
+      - sonarr
+      - prowlarr
+      - recyclarr
+      - vpn
+      - prometheus
+      - homepage
+      - traefik
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://127.0.0.1:8989/ping" ]
+      interval: 30s
+      retries: 10
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # HTTP Routers
+      - "traefik.http.routers.sonarr-router.entrypoints=websecure"
+      - "traefik.http.routers.sonarr-router.rule=Host(`sonarr.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.sonarr-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.sonarr-router.service=sonarr-service"
+      - "traefik.http.services.sonarr-service.loadbalancer.server.port=8989"
+
+  # Prometheus Exporter
+  sonarr-exporter:
+    image: ghcr.io/onedr0p/exportarr:v2.0
+    container_name: sonarr-exporter
+    restart: always
+    command: ["sonarr"]
+    environment:
+      PORT: 8080
+      URL: "http://localhost:7878"
+      APIKEY: ${SONARR_API_KEY}
+    network_mode: "service:sonarr"
+    depends_on:
+      sonarr:
+        condition:  service_healthy
+
+networks:
+  sonarr:
+    name: sonarr

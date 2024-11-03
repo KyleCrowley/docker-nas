@@ -1,0 +1,19 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/settings
+
+title: NAS - Homepage
+
+layout:
+  Media:
+    style: row
+    columns: 3
+  Managers:
+    style: row
+    columns: 3
+  Downloads:
+    style: row
+    columns: 2
+  Metrics:
+    style: row
+    columns: 1

@@ -1,0 +1,53 @@
+services:
+  # Music Manager
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: always
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${APPDATA_DIR}/lidarr:/config
+      - ${LOG_DIR}/lidarr:/config/logs
+      - ${DATA_DIR}:/data
+    networks:
+      - lidarr
+      - prometheus
+      - homepage
+      - traefik
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://127.0.0.1:8686/ping" ]
+      interval: 30s
+      retries: 10
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # HTTP Routers
+      - "traefik.http.routers.lidarr-router.entrypoints=websecure"
+      - "traefik.http.routers.lidarr-router.rule=Host(`lidarr.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.lidarr-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.lidarr-router.service=lidarr-service"
+      - "traefik.http.services.lidarr-service.loadbalancer.server.port=8686"
+
+  # Prometheus Exporter
+  lidarr-exporter:
+    image: ghcr.io/onedr0p/exportarr:v2.0
+    container_name: lidarr-exporter
+    restart: always
+    command: ["lidarr"]
+    environment:
+      PORT: 8080
+      URL: "http://localhost:8686"
+      APIKEY: ${LIDARR_API_KEY}
+    network_mode: "service:lidarr"
+    depends_on:
+      lidarr:
+        condition:  service_healthy
+
+networks:
+  lidarr:
+    name: lidarr

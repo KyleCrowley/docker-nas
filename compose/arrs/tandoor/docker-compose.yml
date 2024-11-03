@@ -1,0 +1,42 @@
+services:
+  tandoor-db:
+    image: postgres:16-alpine
+    container_name: tandoor-db
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - ${APPDATA_DIR}/tandoor-db:/var/lib/postgresql/data
+    networks:
+      - tandoor
+
+  tandoor:
+    image: vabene1111/recipes
+    container_name: tandoor
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - ${APPDATA_DIR}/tandoor/staticfiles:/opt/recipes/staticfiles
+      - ${APPDATA_DIR}/tandoor/mediafiles:/opt/recipes/mediafiles
+    networks:
+      - tandoor
+      - homepage
+      - traefik
+    depends_on:
+      - tandoor-db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # HTTP Routers
+      - "traefik.http.routers.tandoor-router.entrypoints=websecure"
+      - "traefik.http.routers.tandoor-router.rule=Host(`tandoor.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.tandoor-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.tandoor-router.service=tandoor-service"
+      - "traefik.http.services.tandoor-service.loadbalancer.server.port=8080"
+
+networks:
+  tandoor:
+    name: tandoor  

@@ -1,0 +1,10 @@
+services:
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    environment:
+      DOCKER_HOST: tcp://socket-proxy:2375
+      WATCHTOWER_CLEANUP: "true"
+    networks:
+      - socket-proxy

@@ -1,0 +1,10 @@
+include:
+  - compose/networking/docker-compose.yml
+  - compose/management/docker-compose.yml
+  - compose/metrics/docker-compose.yml
+  - compose/arrs/docker-compose.yml
+  - compose/media/docker-compose.yml
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,65 @@
+services:
+  # Indexer Manager
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest 
+    container_name: prowlarr
+    restart: always
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${APPDATA_DIR}/prowlarr:/config
+      - ${LOG_DIR}/prowlarr:/config/logs
+      - ${DATA_DIR}:/data
+    networks:
+      - prowlarr
+      - prometheus
+      - homepage
+      - traefik
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://127.0.0.1:9696/ping" ]
+      interval: 30s
+      retries: 10
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # HTTP Routers
+      - "traefik.http.routers.prowlarr-router.entrypoints=websecure"
+      - "traefik.http.routers.prowlarr-router.rule=Host(`prowlarr.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.prowlarr-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.prowlarr-router.service=prowlarr-service"
+      - "traefik.http.services.prowlarr-service.loadbalancer.server.port=9696"
+
+  # Cloudflare bypass for Prowlarr
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest 
+    container_name: flaresolverr
+    restart: always
+    network_mode: "service:prowlarr"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+
+  # Prometheus Exporter
+  prowlarr-exporter:
+    image: ghcr.io/onedr0p/exportarr:v2.0
+    container_name: prowlarr-exporter
+    restart: always
+    command: ["prowlarr"]
+    environment:
+      PORT: 8080
+      URL: "http://localhost:9696"
+      APIKEY: ${PROWLARR_API_KEY}
+    network_mode: "service:prowlarr"
+    depends_on:
+      prowlarr:
+        condition:  service_healthy
+
+networks:
+  prowlarr:
+    name: prowlarr

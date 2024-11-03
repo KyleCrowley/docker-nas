@@ -1,0 +1,5 @@
+include:
+  - dozzle/docker-compose.yml
+  - homepage/docker-compose.yml
+  - watchtower/docker-compose.yml
+  - autoheal/docker-compose.yml

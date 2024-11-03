@@ -1,0 +1,54 @@
+services:
+  # Subtitle Manager
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: always
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${APPDATA_DIR}/bazarr:/config
+      - ${LOG_DIR}/bazarr:/config/log
+      - ${DATA_DIR}:/data
+    networks:
+      - bazarr
+      - prometheus
+      - homepage
+      - traefik
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://127.0.0.1:6767/ping" ]
+      interval: 5s
+      retries: 10
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # HTTP Routers
+      - "traefik.http.routers.bazarr-router.entrypoints=websecure"
+      - "traefik.http.routers.bazarr-router.rule=Host(`bazarr.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.bazarr-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.bazarr-router.service=bazarr-service"
+      - "traefik.http.services.bazarr-service.loadbalancer.server.port=6767"
+
+  # Prometheus Exporter
+  bazarr-exporter:
+    image: ghcr.io/onedr0p/exportarr:v2.0
+    container_name: bazarr-exporter
+    restart: always
+    command: ["bazarr"]
+    environment:
+      PORT: 8080
+      URL: "http://localhost:6767"
+      APIKEY: ${BAZARR_API_KEY}
+    network_mode: "service:bazarr"
+    depends_on:
+      bazarr:
+        condition:  service_healthy
+        
+
+networks:
+  bazarr:
+    name: bazarr

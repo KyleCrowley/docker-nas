@@ -1,0 +1,84 @@
+services:
+  # Reverse Proxy/Application Gateway
+  traefik:
+    container_name: traefik
+    image: traefik:3.0
+    restart: always
+    networks:
+      socket-proxy:
+      traefik:
+        ipv4_address: 192.168.90.254
+      vpn:
+    command:
+      - --global.checkNewVersion=true
+      - --global.sendAnonymousUsage=false
+      - --log=true
+      - --log.filePath=/logs/traefik.log
+      #- --log.level=DEBUG
+      - --accessLog=true
+      - --accessLog.filePath=/logs/access.log
+      - --accessLog.bufferingSize=100
+      - --accessLog.filters.statusCodes=204-299,400-499,500-599
+      - --api=true
+      - --api.dashboard=true
+      # - --api.insecure=true
+      #- --serversTransport.insecureSkipVerify=true
+      # Providers
+      - --providers.docker=true
+      # - --providers.docker.endpoint=unix:///var/run/docker.sock # Disable for Socket Proxy. Enable otherwise.
+      - --providers.docker.endpoint=tcp://socket-proxy:2375 # Enable for Socket Proxy. Disable otherwise.
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.network=traefik 
+      # - --providers.docker.swarmMode=false # Traefik v2 Swarm
+      # - --providers.swarm.endpoint=tcp://127.0.0.1:2377 # Traefik v3 Swarm
+      - --providers.file.directory=/etc/traefik/rules # Load dynamic configuration from one or more .toml or .yml files in a directory
+      - --providers.file.watch=true # Only works on top level files in the rules folder
+      # Entrypoints
+      - --entrypoints.web.address=:80 # HTTP
+      - --entrypoints.websecure.address=:443 # HTTPS
+      - --entrypoints.traefik.address=:8080 # Dashboard
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure # Redirect HTTP to HTTPS
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
+      - --entrypoints.websecure.forwardedHeaders.trustedIPs=${CLOUDFLARE_IPS},${LOCAL_IPS}
+      - --entrypoints.websecure.http.tls=true
+      # Add myresolver as default certresolver for all services. Also enables TLS and no need to specify on individual services
+      - --entrypoints.websecure.http.tls.certresolver=myresolver 
+      - --entrypoints.websecure.http.tls.domains[0].main=${DOMAIN_NAME}
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.${DOMAIN_NAME}
+      - --entrypoints.websecure.http.tls.options=tls-opts@file
+      # Certificate Resolvers
+      - --certificatesresolvers.myresolver.acme.email=${EMAIL}
+      - --certificatesresolvers.myresolver.acme.dnsChallenge.provider=cloudflare
+      - --certificatesresolvers.myresolver.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53
+      - --certificatesresolvers.myresolver.acme.dnsChallenge.delayBeforeCheck=90 # To delay DNS check and reduce LE hitrate
+      - --certificatesresolvers.myresolver.acme.storage=/etc/traefik/acme.json
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+    volumes:
+      - ${APPDATA_DIR}/traefik:/etc/traefik/
+      - ${CONFIG_DIR}/traefik/rules:/etc/traefik/rules
+      - ${LOG_DIR}/traefik:/logs
+    environment:
+      - CF_DNS_API_TOKEN_FILE=/run/secrets/cf_dns_api_token    
+      - HTPASSWD_FILE=/run/secrets/basic_auth_credentials # HTTP Basic Auth Credentials
+    secrets:
+      - cf_dns_api_token
+      - basic_auth_credentials
+    labels:
+      - "traefik.enable=true"
+      # HTTP Routers
+      - "traefik.http.routers.traefik-rtr.entrypoints=websecure"
+      - "traefik.http.routers.traefik-rtr.rule=Host(`traefik.${DOMAIN_NAME}`)"
+      # Services - API
+      - "traefik.http.routers.traefik-rtr.service=api@internal"
+      # Middlewares
+      - "traefik.http.routers.traefik-rtr.middlewares=chain-basic-auth@file"

@@ -1,0 +1,142 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/services
+
+- Management:
+  - Dozzle:
+      icon: dozzle.png
+      href: "{{HOMEPAGE_VAR_DOZZLE_HREF}}"
+      description: Log Viewer
+      server: my-docker
+      container: dozzle
+
+- Media:
+  - Plex:
+      icon: plex.png
+      href: "{{HOMEPAGE_VAR_PLEX_HREF}}"
+      description: Media Server
+      server: my-docker
+      container: plex
+      widget:
+        type: plex
+        url: "{{HOMEPAGE_VAR_PLEX_URL}}"
+        key: "{{HOMEPAGE_VAR_PLEX_API_KEY}}"
+  - Tautulli:
+      icon: tautulli.png
+      href: "{{HOMEPAGE_VAR_TAUTULLI_HREF}}"
+      description: Plex Monitor
+      server: my-docker
+      container: tautulli
+      widget:
+        type: tautulli
+        url: "{{HOMEPAGE_VAR_TAUTULLI_URL}}"
+        key: "{{HOMEPAGE_VAR_TAUTULLI_API_KEY}}"
+        showEpisodeNumber: true
+  - Overseerr:
+      icon: overseerr.png
+      href: "{{HOMEPAGE_VAR_OVERSEERR_HREF}}"
+      description: Request Manager
+      server: my-docker
+      container: overseerr
+      widget:
+        type: overseerr
+        url: "{{HOMEPAGE_VAR_OVERSEERR_URL}}"
+        key: "{{HOMEPAGE_VAR_OVERSEERR_API_KEY}}"
+
+- Managers:
+  - Radarr:
+      icon: radarr.png
+      href: "{{HOMEPAGE_VAR_RADARR_HREF}}"
+      description: Movie Manager
+      server: my-docker
+      container: radarr
+      widget:
+        type: radarr
+        url: "{{HOMEPAGE_VAR_RADARR_URL}}"
+        key: "{{HOMEPAGE_VAR_RADARR_API_KEY}}"
+  - Radarr (4K):
+      icon: radarr.png
+      href: "{{HOMEPAGE_VAR_RADARR_4K_HREF}}"
+      description: Movie Manager (4K)
+      server: my-docker
+      container: radarr-4k
+      widget:
+        type: radarr
+        url: "{{HOMEPAGE_VAR_RADARR_4K_URL}}"
+        key: "{{HOMEPAGE_VAR_RADARR_4K_API_KEY}}"
+  - Sonarr:
+      icon: sonarr.png
+      href: "{{HOMEPAGE_VAR_SONARR_HREF}}"
+      description: TV Manager
+      server: my-docker
+      container: sonarr
+      widget:
+        type: sonarr
+        url: "{{HOMEPAGE_VAR_SONARR_URL}}"
+        key: "{{HOMEPAGE_VAR_SONARR_API_KEY}}"
+  - Lidarr:
+      icon: lidarr.png
+      href: "{{HOMEPAGE_VAR_LIDARR_HREF}}"
+      description: Music Manager
+      server: my-docker
+      container: lidarr
+      widget:
+        type: lidarr
+        url: "{{HOMEPAGE_VAR_LIDARR_URL}}"
+        key: "{{HOMEPAGE_VAR_LIDARR_API_KEY}}"
+  - Bazarr:
+      icon: bazarr.png
+      href: "{{HOMEPAGE_VAR_BAZARR_HREF}}"
+      description: Subtitle Manager
+      server: my-docker
+      container: bazarr
+      widget:
+        type: bazarr
+        url: "{{HOMEPAGE_VAR_BAZARR_URL}}"
+        key: "{{HOMEPAGE_VAR_BAZARR_API_KEY}}"
+  #- Tandoor:
+  #    icon: tandoor.png
+  #    href: "{{HOMEPAGE_VAR_TANDOOR_HREF}}"
+  #    description: Recipe Manager
+  #    server: my-docker
+  #    container: tandoor
+  #    widget:
+  #      type: tandoor
+  #      url: "{{HOMEPAGE_VAR_TANDOOR_URL}}"
+  #      key: "{{HOMEPAGE_VAR_TANDOOR_API_KEY}}"
+
+- Downloads:
+  - Prowlarr:
+      icon: prowlarr.png
+      href: "{{HOMEPAGE_VAR_PROWLARR_HREF}}"
+      description: Indexer Manager
+      server: my-docker
+      container: prowlarr
+      widget:
+        type: prowlarr
+        url: "{{HOMEPAGE_VAR_PROWLARR_URL}}"
+        key: "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}"
+  - qBittorrent:
+      icon: qbittorrent.png
+      href: "{{HOMEPAGE_VAR_QBITTORRENT_HREF}}"
+      description: BitTorrent Client
+      server: my-docker
+      container: qbittorrent
+      widget:
+        type: qbittorrent
+        url: "{{HOMEPAGE_VAR_QBITTORRENT_URL}}"
+        username: "{{HOMEPAGE_VAR_QBITTORRENT_USERNAME}}"
+        password: "{{HOMEPAGE_VAR_QBITTORRENT_PASSWORD}}"
+
+- Metrics:
+  - Grafana:
+      icon: grafana.png
+      href: "{{HOMEPAGE_VAR_GRAFANA_HREF}}"
+      description: Metrics Dashboard
+      server: my-docker
+      container: grafana
+      widget:
+        type: grafana
+        url: "{{HOMEPAGE_VAR_GRAFANA_URL}}"
+        username: "{{HOMEPAGE_VAR_GRAFANA_USERNAME}}"
+        password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"

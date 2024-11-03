@@ -1,0 +1,77 @@
+services:
+  vpn:
+    image: thrnz/docker-wireguard-pia
+    container_name: vpn
+    restart: always
+    networks:
+      - vpn
+      - homepage
+      - traefik
+    volumes:
+      # Auth token is stored here
+      - ${APPDATA_DIR}/pia:/pia
+      # If enabled, the forwarded port is dumped to /pia-shared/port.dat for potential use in other containers
+      - ${APPDATA_DIR}/pia-shared:/pia-shared
+      - ${SCRIPTS_DIR}/portupdate-qbittorrent.sh:/portupdate-qbittorrent.sh
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - LOC=${PIA_LOCATION}
+      - USER=${PIA_USER}
+      - PASS=${PIA_PASS}
+      - LOCAL_NETWORK=${PIA_LOCAL_NETWORK}
+      - PORT_FORWARDING=1
+      - PORT_PERSIST=1
+      - PORT_SCRIPT=/portupdate-qbittorrent.sh
+      - QBT_USER=${QBITTORRENT_USERNAME}
+      - QBT_PASS=${QBITTORRENT_PASSWORD}
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.default.disable_ipv6=1
+      - net.ipv6.conf.all.disable_ipv6=1
+      - net.ipv6.conf.lo.disable_ipv6=1
+    healthcheck:
+      test: ping -c 1 www.google.com || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # HTTP Routers
+      - "traefik.http.routers.qbittorrent-router.entrypoints=websecure"
+      - "traefik.http.routers.qbittorrent-router.rule=Host(`qbittorrent.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.qbittorrent-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.qbittorrent-router.service=qbittorrent-service"
+      - "traefik.http.services.qbittorrent-service.loadbalancer.server.port=8080"
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+      - DOCKER_MODS=ghcr.io/gabe565/linuxserver-mod-vuetorrent
+    network_mode: "service:vpn"
+    volumes:
+      - ${APPDATA_DIR}/qbittorrent:/config
+      - ${DOWNLOAD_DIR}:/data/torrents
+    healthcheck:
+      # Container may fail if the PIA's token expired, so mark as unhealthy when there is no internet connection
+      # see: https://github.com/qdm12/gluetun/issues/641#issuecomment-933856220
+      test: [ "CMD", "curl", "--fail", "http://127.0.0.1:8080", "https://google.com" ]
+      interval: 30s
+      retries: 10
+    depends_on:
+      vpn:
+        condition: service_healthy
+
+networks:
+  vpn:
+    name: vpn

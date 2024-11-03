@@ -1,0 +1,24 @@
+include:
+  - socket-proxy/docker-compose.yml
+  - traefik/docker-compose.yml
+  - vpn/docker-compose.yml
+
+networks:
+  socket-proxy:
+    name: socket-proxy
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.91.0/24
+  traefik:
+    name: traefik
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.90.0/24
+  
+secrets:
+  basic_auth_credentials:
+    file: $ROOT_DIR/secrets/basic_auth_credentials
+  cf_dns_api_token:
+    file: $ROOT_DIR/secrets/cf_dns_api_token

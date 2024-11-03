@@ -1,0 +1,7 @@
+include:
+  - plex/docker-compose.yml
+  - overseerr/docker-compose.yml
+
+secrets:
+  plex_claim:
+    file: ${ROOT_DIR}/secrets/plex_claim

@@ -1,0 +1,9 @@
+include:
+  - radarr/docker-compose.yml
+  - radarr-4k/docker-compose.yml
+  - sonarr/docker-compose.yml
+  - lidarr/docker-compose.yml
+  - bazarr/docker-compose.yml
+  - prowlarr/docker-compose.yml
+  - recyclarr/docker-compose.yml
+  #- tandoor/docker-compose.yml

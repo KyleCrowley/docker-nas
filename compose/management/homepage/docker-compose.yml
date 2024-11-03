@@ -1,0 +1,30 @@
+services:
+  # Application Dashboard
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    env_file: ../../../.env
+    volumes:
+      - ${CONFIG_DIR}/homepage:/app/config
+    networks:
+      - socket-proxy # Required to automatically discover containers
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      # HTTP Routers
+      - "traefik.http.routers.homepage-router.entrypoints=websecure"
+      - "traefik.http.routers.homepage-router.rule=Host(`${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.homepage-router.middlewares=chain-basic-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.homepage-router.service=homepage-service"
+      - "traefik.http.services.homepage-service.loadbalancer.server.port=3000"
+
+networks:
+  homepage:
+    name: homepage

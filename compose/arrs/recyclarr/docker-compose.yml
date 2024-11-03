@@ -1,0 +1,19 @@
+services:
+  # Synchronizes recommended settings from the TRaSH guides to Sonarr/Radarr
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr
+    container_name: recyclarr
+    restart: always
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${APPDATA_DIR}/recyclarr:/config
+      - ${LOG_DIR}/recyclarr:/config/logs
+    networks:
+      - recyclarr
+
+networks:
+  recyclarr:
+    name: recyclarr

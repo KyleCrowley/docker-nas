@@ -1,0 +1,31 @@
+services:
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - ${APPDATA_DIR}/grafana/data:/var/lib/grafana
+      - ${APPDATA_DIR}/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - grafana
+      - prometheus
+      - homepage
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # HTTP Routers
+      - "traefik.http.routers.grafana-router.entrypoints=websecure"
+      - "traefik.http.routers.grafana-router.rule=Host(`grafana.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.grafana-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.grafana-router.service=grafana-service"
+      - "traefik.http.services.grafana-service.loadbalancer.server.port=3000"
+
+networks:
+  grafana:
+    name: grafana

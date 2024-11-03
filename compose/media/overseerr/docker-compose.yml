@@ -1,0 +1,38 @@
+services:
+  overseerr:
+    image: sctx/overseerr:latest
+    container_name: overseerr
+    restart: always
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${APPDATA_DIR}/overseerr:/app/config
+      - ${LOG_DIR}/overseerr:/app/config/logs
+    networks:
+      - overseerr
+      - radarr
+      - sonarr
+      - plex
+      - homepage
+      - traefik
+    healthcheck:
+      test: [ "CMD", "wget", "http://127.0.0.1:5055/api/v1/status", "-qO", "/dev/null" ]
+      interval: 30s
+      retries: 10
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # HTTP Routers
+      - "traefik.http.routers.overseerr-router.entrypoints=websecure"
+      - "traefik.http.routers.overseerr-router.rule=Host(`overseerr.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.overseerr-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.overseerr-router.service=overseerr-service"
+      - "traefik.http.services.overseerr-service.loadbalancer.server.port=5055"
+
+networks:
+  overseerr:
+    name: overseerr

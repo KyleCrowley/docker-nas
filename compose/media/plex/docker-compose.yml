@@ -1,0 +1,72 @@
+services:
+  # Plex Media Server
+  plex:
+    image: plexinc/pms-docker:plexpass
+    container_name: plex
+    restart: always
+    devices:
+      - /dev/dri:/dev/dri # for hardware transcoding
+    environment:
+      PLEX_UID: ${PUID}
+      PLEX_GID: ${PGID}
+      TZ: ${TZ}
+      ADVERTISE_IP: ${PLEX_URL}
+      ALLOWED_NETWORKS: ${LOCAL_IPS}
+      # PLEX_CLAIM_FILE: /run/secrets/plex_claim # Not required initially
+    volumes:
+      - ${APPDATA_DIR}/plex:/config
+      - ${MEDIA_DIR}:/data/media
+      - /dev/shm:/data/transcode # Offload transcoding to RAM if you have enough RAM
+    networks:
+      - plex
+      - homepage
+      - traefik
+    #ports:
+    #  - "32400:32400/tcp"
+    #  - "3005:3005/tcp"
+    #  - "8324:8324/tcp"
+    #  - "32469:32469/tcp"
+    #  - "1900:1900/udp"
+    #  - "32410:32410/udp"
+    #  - "32412:32412/udp"
+    #  - "32413:32413/udp"
+    #  - "32414:32414/udp"
+    secrets:
+      - plex_claim
+    labels:
+      - "traefik.enable=true"
+      # HTTP Routers
+      - "traefik.http.routers.plex-router.entrypoints=websecure"
+      - "traefik.http.routers.plex-router.rule=Host(`plex.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.plex-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.plex-router.service=plex-service"
+      - "traefik.http.services.plex-service.loadbalancer.server.port=32400"
+      # --- Tautulli --- #
+      # HTTP Routers
+      - "traefik.http.routers.tautulli-router.entrypoints=websecure"
+      - "traefik.http.routers.tautulli-router.rule=Host(`tautulli.${DOMAIN_NAME}`)"
+      # Middlewares
+      - "traefik.http.routers.tautulli-router.middlewares=chain-no-auth@file"
+      # HTTP Services
+      - "traefik.http.routers.tautulli-router.service=tautulli-service"
+      - "traefik.http.services.tautulli-service.loadbalancer.server.port=8181"
+
+  # Plex Monitor
+  tautulli:
+    image: ghcr.io/tautulli/tautulli
+    container_name: tautulli
+    restart: always
+    environment:
+      PLEX_UID: ${PUID}
+      PLEX_GID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${APPDATA_DIR}/tautulli:/config
+      - ${LOG_DIR}/tautulli:/config/logs
+    network_mode: "service:plex"
+
+networks:
+  plex:
+    name: plex
