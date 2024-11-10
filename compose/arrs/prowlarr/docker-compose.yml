@@ -14,6 +14,7 @@ services:
       - ${DATA_DIR}:/data
     networks:
       - prowlarr
+      - flaresolverr
       - prometheus
       - homepage
       - traefik
@@ -32,18 +33,6 @@ services:
       # HTTP Services
       - "traefik.http.routers.prowlarr-router.service=prowlarr-service"
       - "traefik.http.services.prowlarr-service.loadbalancer.server.port=9696"
-
-  # Cloudflare bypass for Prowlarr
-  flaresolverr:
-    image: flaresolverr/flaresolverr:latest 
-    container_name: flaresolverr
-    restart: always
-    network_mode: "service:prowlarr"
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
 
   # Prometheus Exporter
   prowlarr-exporter:

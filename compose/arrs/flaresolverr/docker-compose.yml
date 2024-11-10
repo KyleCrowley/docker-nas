@@ -1,0 +1,17 @@
+services:
+  # Cloudflare bypass for Prowlarr
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest 
+    container_name: flaresolverr
+    restart: always
+    networks:
+      - flaresolverr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+
+networks:
+  flaresolverr:
+    name: flaresolverr

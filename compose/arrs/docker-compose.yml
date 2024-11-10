@@ -5,5 +5,6 @@ include:
   - lidarr/docker-compose.yml
   - bazarr/docker-compose.yml
   - prowlarr/docker-compose.yml
+  - flaresolverr/docker-compose.yml
   - recyclarr/docker-compose.yml
   #- tandoor/docker-compose.yml
